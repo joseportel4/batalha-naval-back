@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
+using System.Text.Json.Nodes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -127,13 +128,67 @@ var app = builder.Build();
 // ==================================================================
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path == "/openapi/v1.json")
+        {
+            var originalBody = context.Response.Body;
+            using var newBody = new MemoryStream();
+            context.Response.Body = newBody;
+
+            await next();
+
+            context.Response.Body = originalBody;
+            newBody.Seek(0, SeekOrigin.Begin);
+            var json = await new StreamReader(newBody).ReadToEndAsync();
+
+            var root = JsonNode.Parse(json);
+            if (root is JsonObject obj)
+            {
+                var components = obj["components"] as JsonObject ?? new JsonObject();
+                obj["components"] = components;
+                
+                var schemes = components["securitySchemes"] as JsonObject ?? new JsonObject();
+                components["securitySchemes"] = schemes;
+
+                if (!schemes.ContainsKey("Bearer"))
+                {
+                    schemes["Bearer"] = JsonNode.Parse("""
+                    {
+                        "type": "http",
+                        "scheme": "bearer",
+                        "bearerFormat": "JWT",
+                        "description": "Insira o token JWT aqui."
+                    }
+                    """);
+                }
+
+                var security = obj["security"] as JsonArray ?? new JsonArray();
+                obj["security"] = security;
+                
+                bool hasBearer = security.Any(x => x is JsonObject s && s.ContainsKey("Bearer"));
+                if (!hasBearer)
+                {
+                    security.Add(JsonNode.Parse("""{ "Bearer": [] }"""));
+                }
+                
+                var modifiedJson = obj.ToString();
+                context.Response.ContentType = "application/json; charset=utf-8";
+                await context.Response.WriteAsync(modifiedJson);
+                return;
+            }
+        }
+        await next();
+    });
+
+    app.MapOpenApi();    
     app.MapScalarApiReference(options =>
     {
         options
             .WithTitle("Batalha Naval Docs")
             .WithTheme(ScalarTheme.Mars)
-            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+            .WithPreferredScheme("Bearer"); 
     });
 }
 

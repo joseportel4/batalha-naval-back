@@ -1,5 +1,6 @@
 ﻿using BatalhaNaval.Application.DTOs;
 using BatalhaNaval.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace batalha_naval_back.Controllers;
@@ -7,6 +8,7 @@ namespace batalha_naval_back.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class MatchController : ControllerBase
 {
     private readonly ILogger<MatchController> _logger;
