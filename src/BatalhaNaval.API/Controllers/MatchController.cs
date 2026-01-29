@@ -193,7 +193,7 @@ public class MatchController : ControllerBase
             return NotFound(new { error = ex.Message });
         }
     }
-    
+
     /// <summary>
     ///     Cancela uma partida existente.
     /// </summary>
@@ -215,7 +215,7 @@ public class MatchController : ControllerBase
     public async Task<IActionResult> CancelMatch(Guid id)
     {
         var playerId = User.GetUserId();
-        
+
         await _matchService.CancelMatchAsync(id, playerId);
 
         return NoContent();

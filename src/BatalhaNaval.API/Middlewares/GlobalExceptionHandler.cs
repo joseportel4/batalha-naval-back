@@ -1,3 +1,4 @@
+using BatalhaNaval.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -52,6 +53,13 @@ public class GlobalExceptionHandler : IExceptionHandler
         {
             problemDetails.Status = StatusCodes.Status404NotFound;
             problemDetails.Title = "Recurso Não Encontrado";
+            problemDetails.Detail = exception.Message;
+        }
+
+        if (exception is InvalidCoordinateException)
+        {
+            problemDetails.Status = StatusCodes.Status400BadRequest;
+            problemDetails.Title = "Coordenada Inválida";
             problemDetails.Detail = exception.Message;
         }
 

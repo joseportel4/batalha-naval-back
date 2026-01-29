@@ -1,4 +1,5 @@
 ﻿using BatalhaNaval.Domain.Enums;
+using BatalhaNaval.Domain.Exceptions;
 using BatalhaNaval.Domain.ValueObjects;
 
 namespace BatalhaNaval.Domain.Entities;
@@ -71,7 +72,11 @@ public class Board
     public bool ReceiveShot(int x, int y)
     {
         // Validação de segurança para acesso a lista
-        if (x < 0 || x >= Size || y < 0 || y >= Size) return false;
+        if (x < 0 || x >= Size || y < 0 || y >= Size)
+        {
+            var invalidCoordinate = x < 0 || x >= Size ? "horizontal" : "vertical";
+            throw new InvalidCoordinateException($"Coordenada {invalidCoordinate} não é um valor válido ({x}, {y}).");
+        }
 
         // MUDANÇA DE SINTAXE: [x][y]
         if (Cells[x][y] == CellState.Hit || Cells[x][y] == CellState.Missed)

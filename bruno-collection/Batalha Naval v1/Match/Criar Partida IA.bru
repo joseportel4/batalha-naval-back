@@ -1,0 +1,28 @@
+meta {
+  name: Criar Partida IA
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/match
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "mode": "Dynamic",
+    "aiDifficulty": "Basic"
+  }
+}
+
+script:post-response {
+  const data = res.getBody();
+  bru.setEnvVar("matchId", data.matchId);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
