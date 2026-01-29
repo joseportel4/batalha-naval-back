@@ -12,4 +12,6 @@ public interface IMatchService
 
     Task ExecutePlayerMoveAsync(MoveShipInput input); // Modo Dinâmico
     // O turno da IA pode ser disparado automaticamente após o turno do jogador
+    
+    Task CancelMatchAsync(Guid matchId, Guid playerId);
 }

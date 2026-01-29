@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using BatalhaNaval.Domain.Enums;
 
 namespace BatalhaNaval.Domain.Entities;
@@ -44,16 +45,20 @@ public class Match
     public Difficulty? AiDifficulty { get; private set; }
 
     [Description("Status atual da partida")]
-    public MatchStatus Status { get; private set; }
+    public MatchStatus Status { get; set; }
 
     [Description("Indica se a partida está finalizada")]
     public bool IsFinished => Status == MatchStatus.Finished;
+
+    [Description("Hora de encerramento da partida")]
+    [Column("finished_at")]
+    public DateTime? FinishedAt { get; set; }
 
     [Description("Identificador único do jogador atual")]
     public Guid CurrentTurnPlayerId { get; private set; }
 
     [Description("Identificador único do vencedor")]
-    public Guid? WinnerId { get; private set; }
+    public Guid? WinnerId { get; set; }
 
     [Description("Data e hora de início da partida")]
     public DateTime StartedAt { get; private set; } // Quando o status muda para InProgress

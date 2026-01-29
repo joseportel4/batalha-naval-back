@@ -1,4 +1,5 @@
-﻿using BatalhaNaval.Application.DTOs;
+﻿using BatalhaNaval.API.Extensions;
+using BatalhaNaval.Application.DTOs;
 using BatalhaNaval.Application.Interfaces;
 using BatalhaNaval.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -136,6 +137,7 @@ public class MatchController : ControllerBase
     /// </remarks>
     /// <response code="200">Tiro executado com sucesso.</response>
     /// <response code="400">Dados inválidos para executar o tiro.</response>
+    /// <response code="404">Partida não encontrada.</response>
     [HttpPost("shot", Name = "PostExecuteShot")]
     [ProducesResponseType(typeof(TurnResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -187,5 +189,32 @@ public class MatchController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+    }
+    
+    /// <summary>
+    ///     Cancela uma partida existente.
+    /// </summary>
+    /// <remarks>
+    ///     Se a partida estiver em 'Setup', ela é excluída sem penalidades.
+    ///     Se estiver 'InProgress', conta como derrota para quem cancelou.
+    /// </remarks>
+    /// <response code="204">Partida cancelada com sucesso.</response>
+    /// <response code="401">Token inválido ou ausente.</response>
+    /// <response code="403">Jogador não é dono da partida.</response>
+    /// <response code="404">Partida não encontrada.</response>
+    /// <response code="409">Partida já finalizada.</response>
+    [HttpPost("{id:guid}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CancelMatch(Guid id)
+    {
+        var playerId = User.GetUserId();
+        
+        await _matchService.CancelMatchAsync(id, playerId);
+
+        return NoContent();
     }
 }

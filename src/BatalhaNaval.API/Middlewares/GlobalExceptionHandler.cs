@@ -33,6 +33,27 @@ public class GlobalExceptionHandler : IExceptionHandler
             problemDetails.Title = "Erro de Validação";
             problemDetails.Detail = exception.Message;
         }
+        
+        if (exception is UnauthorizedAccessException)
+        {
+            problemDetails.Status = StatusCodes.Status403Forbidden;
+            problemDetails.Title = "Acesso Negado";
+            problemDetails.Detail = exception.Message;
+        }
+        
+        if (exception is InvalidOperationException)
+        {
+            problemDetails.Status = StatusCodes.Status409Conflict;
+            problemDetails.Title = "Operação Inválida";
+            problemDetails.Detail = exception.Message;
+        }
+
+        if (exception is KeyNotFoundException)
+        {
+            problemDetails.Status = StatusCodes.Status404NotFound;
+            problemDetails.Title = "Recurso Não Encontrado";
+            problemDetails.Detail = exception.Message;
+        }
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
 

@@ -272,4 +272,55 @@ public class MatchService : IMatchService
 
         return coords;
     }
+
+    public async Task CancelMatchAsync(Guid matchId, Guid playerId)
+    {
+        var match = await _repository.GetByIdAsync(matchId);
+
+        if (match == null)
+        {
+            throw new KeyNotFoundException($"Partida {matchId} não encontrada.");
+        }
+
+        if (match.Player1Id != playerId && match.Player2Id != playerId)
+        {
+            throw new UnauthorizedAccessException("O jogador não participa desta partida.");
+        }
+
+        if (match.Status == MatchStatus.Finished)
+        {
+            throw new InvalidOperationException("Esta partida já foi finalizada.");
+        }
+
+        // CENÁRIO A: Partida em Configuração (Setup) -> Sem ônus
+        if (match.Status == MatchStatus.Setup)
+        {
+            // Remove do banco
+            await _repository.DeleteAsync(match);
+            return;
+        }
+
+        // CENÁRIO B: Partida em Andamento (InProgress) -> Com ônus
+        match.Status = MatchStatus.Finished;
+        match.FinishedAt = DateTime.UtcNow;
+
+        // Define o vencedor (quem NÃO cancelou)
+        if (match.Player1Id == playerId)
+        {
+            // P2 vence. Se P2 for NULL (IA), o WinnerId fica NULL
+            match.WinnerId = match.Player2Id;
+        }
+        // TODO Verificar se precisa realmente do else, pois quem chamou é quem cancelou
+        else
+        {
+            // P1 vence (alguém cancelou).
+            match.WinnerId = match.Player1Id;
+        }
+
+        // TODO: Calcular Ranking para o Vencedor e Perdedor
+        // TODO: Atualizar estatísticas de Vitórias/Derrotas em PlayerProfile
+        // TODO: Verificar conquistas de medalhas
+
+        await _repository.UpdateAsync(match);
+    }
 }
