@@ -137,7 +137,12 @@ builder.Services.AddHealthChecks()
         HealthStatus.Unhealthy,
         new[] { "readiness", "cache" });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // ==================================================================
 // 5. Pipeline de Execução (Middleware)
