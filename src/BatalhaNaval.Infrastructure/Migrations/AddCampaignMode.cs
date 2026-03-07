@@ -11,10 +11,10 @@ namespace BatalhaNaval.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
+            migrationBuilder.AddColumn<int>(
                 name: "campaign_stage",
                 table: "matches",
-                type: "text",
+                type: "integer",
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
@@ -65,7 +65,7 @@ namespace BatalhaNaval.Infrastructure.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    current_stage = table.Column<string>(type: "text", nullable: false),
+                    current_stage = table.Column<int>(type: "integer", nullable: false),
                     completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
