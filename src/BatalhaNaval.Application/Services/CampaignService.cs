@@ -12,15 +12,18 @@ public class CampaignService : ICampaignService
     private readonly ICampaignRepository _campaignRepository;
     private readonly IMatchRepository _matchRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IMatchService _matchService;
 
     public CampaignService(
         ICampaignRepository campaignRepository,
         IMatchRepository matchRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IMatchService matchService)
     {
         _campaignRepository = campaignRepository;
         _matchRepository = matchRepository;
         _userRepository = userRepository;
+        _matchService = matchService;
     }
 
     // ====================================================================
@@ -68,12 +71,20 @@ public class CampaignService : ICampaignService
                      $"Estágio de campanha inesperado: '{progress.CurrentStage}'. Contate o suporte.")
         };
 
-        var match = new Match(userId, gameMode, difficulty)
-        {
-            IsCampaignMatch = true,
-            CampaignStage   = progress.CurrentStage
-        };
+        var startInput = new StartMatchInput(gameMode, difficulty);
 
+        var matchId = await _matchService.StartMatchAsync(startInput, userId);
+        
+        var match = await _matchRepository.GetByIdAsync(matchId)
+            ?? throw new InvalidOperationException(
+                $"Partida '{matchId}' não encontrada após criação. Contate o suporte.");
+        
+        match.IsCampaignMatch = true;
+        match.CampaignStage = progress.CurrentStage;
+
+        // A entidade foi carregada via GetByIdAsync e está sendo rastreada pelo EF (Tracked).
+        // SaveAsync trata o cenário Tracked corretamente: marca as propriedades como Modified
+        // e chama SaveChangesAsync — sem risco de conflito de rastreamento do DbContext.
         await _matchRepository.SaveAsync(match);
 
         return new StartCampaignMatchResponseDto(
