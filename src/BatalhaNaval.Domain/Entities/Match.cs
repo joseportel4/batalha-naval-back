@@ -129,7 +129,7 @@ public class Match
             GameMode = MapGameModeToRedis(Mode),
             AiDifficulty = AiDifficulty.HasValue ? MapDifficultyToRedis(AiDifficulty.Value) : null,
             Status = MapStatusToRedis(Status),
-
+            MovedThisTurn = HasMovedThisTurn,
             TurnPlayerId = CurrentTurnPlayerId.ToString(),
             TurnStartedAt = new DateTimeOffset(LastMoveAt).ToUnixTimeSeconds(),
 
@@ -170,7 +170,7 @@ public class Match
         var difficulty = dto.AiDifficulty.HasValue ? MapDifficultyFromRedis(dto.AiDifficulty.Value) : (Difficulty?)null;
         // 2. Cria instância
         var match = new Match(p1Id, mode, difficulty, p2Id);
-
+        match.HasMovedThisTurn = dto.MovedThisTurn;
         // 3. Hidrata propriedades
         match.Id = Guid.Parse(dto.MatchId);
         match.Status = MapStatusFromRedis(dto.Status);
@@ -428,7 +428,8 @@ public class Match
             FinishGame(playerId);
         else if (!isHit)
             SwitchTurn();
-        else
+       
+        else if (Mode == GameMode.Dynamic)
             HasMovedThisTurn = false;
 
         LastMoveAt = DateTime.UtcNow;

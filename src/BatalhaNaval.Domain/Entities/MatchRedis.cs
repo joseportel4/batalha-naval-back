@@ -6,7 +6,7 @@ namespace BatalhaNaval.Domain.Entities;
 public class MatchRedis
 {
     [JsonPropertyName("MatchId")] public string MatchId { get; set; }
-
+    [JsonPropertyName("MovedThisTurn")] public bool MovedThisTurn { get; set; }
     [JsonPropertyName("GameMode")] public GameModeRedis GameMode { get; set; }
     
     [JsonPropertyName("StartedAt")]public long StartedAt { get; set; }
